@@ -1621,8 +1621,33 @@ private class Manager {
 
 private let manager = Manager()
 
+public protocol WebSocketType {
+
+    init()
+
+    func open(request: NSURLRequest, subProtocols: [String])
+
+    func send(message: Any)
+}
+
+public extension WebSocketType {
+
+    /// Opens a deferred or closed WebSocket connection to a URL; this should be the URL to which the WebSocket server will respond.
+    public func open(url: String){
+        open(NSURLRequest(URL: NSURL(string: url)!), subProtocols: [])
+    }
+    /// Opens a deferred or closed WebSocket connection to a URL; this should be the URL to which the WebSocket server will respond. Also include a list of protocols.
+    public func open(url: String, subProtocols : [String]){
+        open(NSURLRequest(URL: NSURL(string: url)!), subProtocols: subProtocols)
+    }
+    /// Opens a deferred or closed WebSocket connection to a URL; this should be the URL to which the WebSocket server will respond. Also include a protocol.
+    public func open(url: String, subProtocol : String){
+        open(NSURLRequest(URL: NSURL(string: url)!), subProtocols: [subProtocol])
+    }
+}
+
 /// WebSocket objects are bidirectional network streams that communicate over HTTP. RFC 6455.
-public class WebSocket: NSObject {
+public class WebSocket: NSObject, WebSocketType, Hashable {
     private var ws: InnerWebSocket
     private var id = manager.nextId()
     private var opened: Bool
@@ -1649,7 +1674,7 @@ public class WebSocket: NSObject {
         ws = InnerWebSocket(request: request, subProtocols: subProtocols, stub: false)
     }
     /// Create a WebSocket object with a deferred connection; the connection is not opened until the .open() method is called.
-    public override init(){
+    public required init(){
         opened = false
         ws = InnerWebSocket(request: NSURLRequest(), subProtocols: [], stub: true)
         super.init()
